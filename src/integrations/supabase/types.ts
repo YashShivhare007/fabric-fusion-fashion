@@ -9,7 +9,153 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      fabrics: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          fabric_type: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          name: string
+          price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fabric_type?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          name: string
+          price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fabric_type?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      generations: {
+        Row: {
+          created_at: string | null
+          fabric_id: string | null
+          generated_image_url: string | null
+          id: string
+          kurti_style_id: string | null
+          prompt_used: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          user_image_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          fabric_id?: string | null
+          generated_image_url?: string | null
+          id?: string
+          kurti_style_id?: string | null
+          prompt_used?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          user_image_url: string
+        }
+        Update: {
+          created_at?: string | null
+          fabric_id?: string | null
+          generated_image_url?: string | null
+          id?: string
+          kurti_style_id?: string | null
+          prompt_used?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          user_image_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generations_fabric_id_fkey"
+            columns: ["fabric_id"]
+            isOneToOne: false
+            referencedRelation: "fabrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generations_kurti_style_id_fkey"
+            columns: ["kurti_style_id"]
+            isOneToOne: false
+            referencedRelation: "kurti_styles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kurti_styles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +164,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +279,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "user"],
+    },
   },
 } as const

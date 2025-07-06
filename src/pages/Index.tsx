@@ -1,5 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { FabricGallery } from "@/components/FabricGallery";
 import { ImageUpload } from "@/components/ImageUpload";
 import { StyleSelector } from "@/components/StyleSelector";
@@ -8,12 +11,42 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Upload, Palette, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type Fabric = Database['public']['Tables']['fabrics']['Row'];
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [fabrics, setFabrics] = useState<Fabric[]>([]);
   const [selectedFabric, setSelectedFabric] = useState<string | null>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  useEffect(() => {
+    fetchFabrics();
+  }, []);
+
+  const fetchFabrics = async () => {
+    const { data, error } = await supabase
+      .from('fabrics')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching fabrics:', error);
+    } else {
+      setFabrics(data || []);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!selectedFabric || !uploadedImage || !selectedStyle) {
@@ -21,15 +54,56 @@ const Index = () => {
       return;
     }
 
+    if (!user) {
+      toast.error("Please sign in to generate images");
+      return;
+    }
+
     setIsGenerating(true);
-    // Simulate AI generation for demo
-    setTimeout(() => {
+    
+    try {
+      // Create generation record
+      const { data: generation, error } = await supabase
+        .from('generations')
+        .insert({
+          user_id: user.id,
+          fabric_id: selectedFabric,
+          kurti_style_id: selectedStyle,
+          user_image_url: uploadedImage,
+          status: 'processing'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // TODO: Call GPT-4.1 API for image generation
+      // For now, simulate the process
+      setTimeout(() => {
+        setIsGenerating(false);
+        toast.success("Your custom kurti design is ready!");
+      }, 3000);
+      
+    } catch (error: any) {
+      console.error('Error generating image:', error);
+      toast.error("Failed to generate image. Please try again.");
       setIsGenerating(false);
-      toast.success("Your custom kurti design is ready!");
-    }, 3000);
+    }
   };
 
   const isReadyToGenerate = selectedFabric && uploadedImage && selectedStyle;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to auth
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50">
@@ -44,7 +118,7 @@ const Index = () => {
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-bold bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6">
-            Fabric Fusion
+            Tulsi Fabrics
           </h1>
           
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
@@ -88,6 +162,7 @@ const Index = () => {
           {/* Left Column */}
           <div className="space-y-8">
             <FabricGallery 
+              fabrics={fabrics}
               selectedFabric={selectedFabric}
               onFabricSelect={setSelectedFabric}
             />
